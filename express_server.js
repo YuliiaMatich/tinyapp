@@ -50,6 +50,13 @@ app.get("/urls/:id", (req, res) => { // shows page dedicated to one short URL
   res.render("urls_show", templateVars);
 });
 
+app.post("/urls/:id/", (req, res) => { // updates the existing long URL
+  const shortUrlId = req.params.id;
+  let userLongUrl = req.body.longURL;
+  urlDatabase[shortUrlId] = userLongUrl;
+  res.redirect('/urls'); 
+});
+
 app.get("/u/:id", (req, res) => { // when a user clicks a short URL they're being redirected to long URL
   const shortUrlId = req.params.id; // parameter of request;
   let longURL = urlDatabase[shortUrlId];
@@ -65,6 +72,7 @@ app.post("/urls/:id/delete", (req, res) => { // delete button
   delete urlDatabase[shortUrlId]; // deletees URL
   res.redirect('/urls'); // redirect to URL (home)) page
 });
+
 
 app.listen(PORT, () => { // server listens to user's input
   console.log(`Example app listening on port ${PORT}!`);
