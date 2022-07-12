@@ -9,47 +9,57 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-function generateRandomString() {
+const generateRandomString = () => { // generates 6 alpha numeric characters random Id;
   return (Math.random() + 1).toString(36).substring(6);
-}
+};
 
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true })); // express library, decodes req.body (key=value) to {key: value}
 
-app.get("/urls", (req, res) => {
+app.get("/urls", (req, res) => { // renders index page with all URLs
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
 app.post("/urls", (req, res) => {
+  let randomId = generateRandomString(); // called function generartes ramdom short URL
+  let userLongUrl = req.body.longURL; // long URL input from user;
+  urlDatabase[randomId] = userLongUrl; // added new key value pair to URL database
   console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  res.redirect(`/urls/${randomId}`); // redirect to a page with a newly created URL
 });
 
-app.get("/", (req, res) => {
+app.get("/", (req, res) => { // root rout, shows "Hello"
   res.send("Hello!");
 });
 
-app.get("/urls.json", (req, res) => {
+app.get("/urls.json", (req, res) => { // shows database in browser as JSON
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
+app.get("/hello", (req, res) => { // placeholder route
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.get("/urls/new", (req, res) => {
+app.get("/urls/new", (req, res) => { // renders a page to create a new URL
   res.render("urls_new");
 });
 
-app.get("/urls/:id", (req, res) => {
-  console.log(req.params)
+app.get("/urls/:id", (req, res) => { // shows page dedicated to one short URL
   const shortUrlId = req.params.id; // parameter of request;
   const templateVars = { id: shortUrlId, longURL: urlDatabase[shortUrlId] };
   res.render("urls_show", templateVars);
 });
 
+app.get("/u/:id", (req, res) => { // when a user clicks a short URL they're being redirected to long URL
+  const shortUrlId = req.params.id; // parameter of request;
+  let longURL = urlDatabase[shortUrlId];
+  if (!longURL) {
+    res.send('URL does not exist');
+  } else {
+    res.redirect(longURL);
+  }
+});
 
-
-app.listen(PORT, () => {
+app.listen(PORT, () => { // server listens to user's input
   console.log(`Example app listening on port ${PORT}!`);
 });
