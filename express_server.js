@@ -60,6 +60,12 @@ app.get("/u/:id", (req, res) => { // when a user clicks a short URL they're bein
   }
 });
 
+app.post("/urls/:id/delete", (req, res) => { // delete button
+  const shortUrlId = req.params.id;
+  delete urlDatabase[shortUrlId]; // deletees URL
+  res.redirect('/urls'); // redirect to URL (home)) page
+});
+
 app.listen(PORT, () => { // server listens to user's input
   console.log(`Example app listening on port ${PORT}!`);
 });
