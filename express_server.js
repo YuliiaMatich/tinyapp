@@ -36,6 +36,22 @@ const findUserByEmail = function (users, email) { // checks is email already exi
   }
  } 
 
+ const findUserId = function (users, email) {
+  for (let userId in users) {
+    if (users[userId].email === email) {
+     return userId; 
+    }
+  }
+ }
+
+ const checkPassword = function (users, email, password) {
+  for (let userId in users) {
+    if (users[userId].email === email && users[userId].password === password) {
+     return true; 
+    }
+  }
+ }
+
 app.use(express.urlencoded({ extended: true })); // express library, decodes req.body (key=value) to {key: value}
 
 app.get("/urls", (req, res) => { // renders index page with all URLs
@@ -106,11 +122,6 @@ app.post("/urls/:id/delete", (req, res) => { // delete button
   res.redirect('/urls'); // redirect to URL (home)) page
 });
 
-app.post("/login", (req, res) => { // login button
-  const login = req.body.username; // username input by user in the login form
-  res.cookie('user_id', login) // records cookie to browser (dev tools - application - cookies - local host)
-  res.redirect('/urls'); // redirect to URL (home)) page
-});
 
 app.post("/logout", (req, res) => { // logout button
   res.clearCookie('user_id');
@@ -149,9 +160,20 @@ app.post("/register", (req, res) => {
     
 });
 
+
 app.post("/login", (req, res) => {
   let email = req.body.email;
-  let password = req.body.password;    
+  let password = req.body.password; 
+  let id = findUserId(users, email);
+  
+  if (!findUserByEmail(users, email)) {
+    res.status(403).send('This email is not registered');
+ } else if (!checkPassword(users, email, password)) {
+    res.status(403).send('Wrong password');
+ } else {
+  res.cookie("user_id", id);
+  res.redirect('/urls');
+ }
 });
 
 app.get("/login", (req, res) => { // registration form
