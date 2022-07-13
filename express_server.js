@@ -149,6 +149,17 @@ app.post("/register", (req, res) => {
     
 });
 
+app.post("/login", (req, res) => {
+  let email = req.body.email;
+  let password = req.body.password;    
+});
+
+app.get("/login", (req, res) => { // registration form
+  const templateVars = {
+    user: users[req.cookies["user_id"]]
+  }; 
+  res.render("login", templateVars);
+});
 
 app.listen(PORT, () => { // server listens to user's input
   console.log(`Example app listening on port ${PORT}!`);
