@@ -33,7 +33,7 @@ app.use(express.urlencoded({ extended: true })); // express library, decodes req
 app.get("/urls", (req, res) => { // renders index page with all URLs
   const templateVars = { 
     urls: urlDatabase, 
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
    };
   res.render("urls_index", templateVars);
 });
@@ -60,14 +60,18 @@ app.get("/hello", (req, res) => { // placeholder route
 
 app.get("/urls/new", (req, res) => { // renders a page to create a new URL
   const templateVars = {
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
   };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => { // shows page dedicated to one short URL
   const shortUrlId = req.params.id; // parameter of request;
-  const templateVars = { id: shortUrlId, longURL: urlDatabase[shortUrlId], username: req.cookies["username"], };
+  const templateVars = { 
+    id: shortUrlId, 
+    longURL: urlDatabase[shortUrlId], 
+    user: users[req.cookies["user_id"]]
+  };
   res.render("urls_show", templateVars);
 });
 
@@ -96,18 +100,18 @@ app.post("/urls/:id/delete", (req, res) => { // delete button
 
 app.post("/login", (req, res) => { // login button
   const login = req.body.username; // username input by user in the login form
-  res.cookie('username', login) // records cookie to browser (dev tools - application - cookies - local host)
+  res.cookie('user_id', login) // records cookie to browser (dev tools - application - cookies - local host)
   res.redirect('/urls'); // redirect to URL (home)) page
 });
 
 app.post("/logout", (req, res) => { // logout button
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls'); // redirect to URL (home)) page
 });
 
 app.get("/register", (req, res) => { // registration form
   const templateVars = {
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
   }; 
   res.render("register", templateVars);
 });
@@ -116,12 +120,12 @@ app.post("/register", (req, res) => {
   let id = generateRandomString();
   let email = req.body.email;
   let password = req.body.password;
-  users[id] = {
+  users[id] = { // add new user object to global users object
     id, 
     email, 
     password
   };
-  res.cookie("user_id", id)
+  res.cookie("user_id", id);
   res.redirect('/urls');
 });
 
