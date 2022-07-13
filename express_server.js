@@ -28,6 +28,14 @@ const generateRandomString = () => { // generates 6 alpha numeric characters ran
   return (Math.random() + 1).toString(36).substring(6);
 };
 
+const findUserByEmail = function (users, email) { // checks is email already exist in users object
+  for (let userName in users) {
+    if (users[userName].email === email) {
+     return users[userName]; 
+    }
+  }
+ } 
+
 app.use(express.urlencoded({ extended: true })); // express library, decodes req.body (key=value) to {key: value}
 
 app.get("/urls", (req, res) => { // renders index page with all URLs
@@ -116,17 +124,29 @@ app.get("/register", (req, res) => { // registration form
   res.render("register", templateVars);
 });
 
+
 app.post("/register", (req, res) => {
   let id = generateRandomString();
   let email = req.body.email;
   let password = req.body.password;
-  users[id] = { // add new user object to global users object
-    id, 
-    email, 
-    password
-  };
-  res.cookie("user_id", id);
-  res.redirect('/urls');
+  
+  if (!email || !password ) {
+    res.status(400).send('Invalid email or password');
+  } else {
+    if (findUserByEmail(users, email)) {
+       return res.status(400).send('User with this email already exists');
+    }
+
+    users[id] = { // add new user object to global users object
+      id, 
+      email, 
+      password
+    };
+    console.log(users);
+    res.cookie("user_id", id); 
+    res.redirect('/urls');
+    }
+    
 });
 
 
