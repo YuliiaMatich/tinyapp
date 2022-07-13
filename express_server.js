@@ -1,5 +1,7 @@
 const express = require("express");
 const app = express();
+const cookieParser = require('cookie-parser');
+app.use(cookieParser()); // use cookies;
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs"); // EJS engine
@@ -16,7 +18,10 @@ const generateRandomString = () => { // generates 6 alpha numeric characters ran
 app.use(express.urlencoded({ extended: true })); // express library, decodes req.body (key=value) to {key: value}
 
 app.get("/urls", (req, res) => { // renders index page with all URLs
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    urls: urlDatabase, 
+    username: req.cookies["username"]
+   };
   res.render("urls_index", templateVars);
 });
 
@@ -41,12 +46,15 @@ app.get("/hello", (req, res) => { // placeholder route
 });
 
 app.get("/urls/new", (req, res) => { // renders a page to create a new URL
-  res.render("urls_new");
+  const templateVars = {
+    username: req.cookies["username"]
+  };
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => { // shows page dedicated to one short URL
   const shortUrlId = req.params.id; // parameter of request;
-  const templateVars = { id: shortUrlId, longURL: urlDatabase[shortUrlId] };
+  const templateVars = { id: shortUrlId, longURL: urlDatabase[shortUrlId], username: req.cookies["username"], };
   res.render("urls_show", templateVars);
 });
 
@@ -70,6 +78,17 @@ app.get("/u/:id", (req, res) => { // when a user clicks a short URL they're bein
 app.post("/urls/:id/delete", (req, res) => { // delete button
   const shortUrlId = req.params.id;
   delete urlDatabase[shortUrlId]; // deletees URL
+  res.redirect('/urls'); // redirect to URL (home)) page
+});
+
+app.post("/login", (req, res) => { // login button
+  const login = req.body.username; // username input by user in the login form
+  res.cookie('username', login) // records cookie to browser (dev tools - application - cookies - local host)
+  res.redirect('/urls'); // redirect to URL (home)) page
+});
+
+app.post("/logout", (req, res) => { // logout button
+  res.clearCookie('username');
   res.redirect('/urls'); // redirect to URL (home)) page
 });
 
