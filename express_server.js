@@ -64,11 +64,26 @@ const findUserByEmail = function (users, email) { // checks is email already exi
   }
  }
 
+ const urlsForUser = function (id) {
+  
+  let urlsObject = {};
+  for (let key in urlDatabase) {
+    if (urlDatabase[key].userID === id) {
+      urlsObject[key] = urlDatabase[key].longURL;
+    }
+  }
+  return urlsObject;
+ }
+
 app.use(express.urlencoded({ extended: true })); // express library, decodes req.body (key=value) to {key: value}
 
 app.get("/urls", (req, res) => { // renders index page with all URLs
+  if (!req.cookies["user_id"]) { // redirection if user logged in
+    return res.send("<html><body>You<b>MUST</b>log in or register to shorten URL!!! <a href='http://localhost:8080/login'>Login here</a> <a href='http://localhost:8080/register'>Register here</a></body></html>\n");
+  }
+  let userUrls = urlsForUser(req.cookies["user_id"])
   const templateVars = { 
-    urls: urlDatabase, 
+    urls: userUrls, 
     user: users[req.cookies["user_id"]]
    };
   res.render("urls_index", templateVars);
@@ -83,7 +98,7 @@ app.post("/urls", (req, res) => {
   let userLongUrl = req.body.longURL; // long URL input from user;
   urlDatabase[randomId] = {
     longURL: userLongUrl,
-    userId: userId
+    userID: userId
   }; // added new key value pair to URL database
   console.log(req.body); // Log the POST request body to the console
   res.redirect(`/urls/${randomId}`); // redirect to a page with a newly created URL
@@ -112,7 +127,14 @@ app.get("/urls/new", (req, res) => { // renders a page to create a new URL
 });
 
 app.get("/urls/:id", (req, res) => { // shows page dedicated to one short URL
+  if (!req.cookies["user_id"]) { // redirection if user logged in
+    return res.send("<html><body>You<b>MUST</b>log in or register to view shortened URL!!! <a href='http://localhost:8080/login'>Login here</a> <a href='http://localhost:8080/register'>Register here</a></body></html>\n");
+  }
+
   const shortUrlId = req.params.id; // parameter of request;
+  if(urlDatabase[shortUrlId].userID !== req.cookies["user_id"]) {
+    return res.send("<html><body>You<b>DONT</b>own this URL, log in or register to view shortened URL!!! <a href='http://localhost:8080/login'>Login here</a> <a href='http://localhost:8080/register'>Register here</a></body></html>\n");
+  }
   const templateVars = { 
     id: shortUrlId, 
     longURL: urlDatabase[shortUrlId].longURL, 
@@ -139,6 +161,9 @@ app.get("/u/:id", (req, res) => { // when a user clicks a short URL they're bein
 });
 
 app.post("/urls/:id/delete", (req, res) => { // delete button
+  if (!req.cookies["user_id"]) { // redirection if user logged in
+    return res.send("<html><body>You<b>MUST</b>log in to delete shorten URL!!!</body></html>\n");
+  }
   const shortUrlId = req.params.id;
   delete urlDatabase[shortUrlId]; // deletees URL
   res.redirect('/urls'); // redirect to URL (home)) page
