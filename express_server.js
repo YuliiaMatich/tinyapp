@@ -6,9 +6,21 @@ const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs"); // EJS engine
 
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
+
+
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 const users = {
@@ -66,10 +78,13 @@ app.post("/urls", (req, res) => {
   if (!req.cookies["user_id"]) { // redirection if user logged in
     return res.send("<html><body>You<b>MUST</b>log in to shorten URL!!!</body></html>\n");
   }
-  
+  let userId = req.cookies["user_id"];
   let randomId = generateRandomString(); // called function generartes ramdom short URL
   let userLongUrl = req.body.longURL; // long URL input from user;
-  urlDatabase[randomId] = userLongUrl; // added new key value pair to URL database
+  urlDatabase[randomId] = {
+    longURL: userLongUrl,
+    userId: userId
+  }; // added new key value pair to URL database
   console.log(req.body); // Log the POST request body to the console
   res.redirect(`/urls/${randomId}`); // redirect to a page with a newly created URL
 });
@@ -100,7 +115,7 @@ app.get("/urls/:id", (req, res) => { // shows page dedicated to one short URL
   const shortUrlId = req.params.id; // parameter of request;
   const templateVars = { 
     id: shortUrlId, 
-    longURL: urlDatabase[shortUrlId], 
+    longURL: urlDatabase[shortUrlId].longURL, 
     user: users[req.cookies["user_id"]]
   };
   res.render("urls_show", templateVars);
@@ -109,7 +124,7 @@ app.get("/urls/:id", (req, res) => { // shows page dedicated to one short URL
 app.post("/urls/:id/", (req, res) => { // updates the existing long URL
   const shortUrlId = req.params.id;
   let userLongUrl = req.body.longURL;
-  urlDatabase[shortUrlId] = userLongUrl;
+  urlDatabase[shortUrlId].longURL = userLongUrl;
   res.redirect('/urls'); 
 });
 
