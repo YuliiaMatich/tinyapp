@@ -1,8 +1,16 @@
 const express = require("express");
+const cookieSession = require('cookie-session');
 const app = express();
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser'); // replaced with cookie session
 const bcrypt = require("bcryptjs");
-app.use(cookieParser()); // use cookies;
+//app.use(cookieParser()); // replaced with cookie session
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2'],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs"); // EJS engine
@@ -75,22 +83,22 @@ const findUserByEmail = function (users, email) { // checks is email already exi
 app.use(express.urlencoded({ extended: true })); // express library, decodes req.body (key=value) to {key: value}
 
 app.get("/urls", (req, res) => { // renders index page with all URLs
-  if (!req.cookies["user_id"]) { // redirection if user logged in
+  if (!req.session.user_id) { // redirection if user logged in
     return res.send("<html><body>You<b>MUST</b>log in or register to shorten URL!!! <a href='http://localhost:8080/login'>Login here</a> <a href='http://localhost:8080/register'>Register here</a></body></html>\n");
   }
-  let userUrls = urlsForUser(req.cookies["user_id"])
+  let userUrls = urlsForUser(req.session.user_id)
   const templateVars = { 
     urls: userUrls, 
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
    };
   res.render("urls_index", templateVars);
 });
 
 app.post("/urls", (req, res) => {
-  if (!req.cookies["user_id"]) { // redirection if user logged in
+  if (!req.session.user_id) { // redirection if user logged in
     return res.send("<html><body>You<b>MUST</b>log in to shorten URL!!!</body></html>\n");
   }
-  let userId = req.cookies["user_id"];
+  let userId = req.session.user_id;
   let randomId = generateRandomString(); // called function generartes ramdom short URL
   let userLongUrl = req.body.longURL; // long URL input from user;
   urlDatabase[randomId] = {
@@ -114,28 +122,28 @@ app.get("/hello", (req, res) => { // placeholder route
 });
 
 app.get("/urls/new", (req, res) => { // renders a page to create a new URL
-  if (!req.cookies["user_id"]) { // redirects if is not logged in
+  if (!req.session.user_id) { // redirects if is not logged in
     return res.redirect('/login');
   }
   const templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => { // shows page dedicated to one short URL
-  if (!req.cookies["user_id"]) { // redirection if user logged in
+  if (!req.session.user_id) { // redirection if user logged in
     return res.send("<html><body>You<b>MUST</b>log in or register to view shortened URL!!! <a href='http://localhost:8080/login'>Login here</a> <a href='http://localhost:8080/register'>Register here</a></body></html>\n");
   }
 
   const shortUrlId = req.params.id; // parameter of request;
-  if(urlDatabase[shortUrlId].userID !== req.cookies["user_id"]) {
+  if(urlDatabase[shortUrlId].userID !== req.session.user_id) {
     return res.send("<html><body>You<b>DONT</b>own this URL, log in or register to view shortened URL!!! <a href='http://localhost:8080/login'>Login here</a> <a href='http://localhost:8080/register'>Register here</a></body></html>\n");
   }
   const templateVars = { 
     id: shortUrlId, 
     longURL: urlDatabase[shortUrlId].longURL, 
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   };
   res.render("urls_show", templateVars);
 });
@@ -158,7 +166,7 @@ app.get("/u/:id", (req, res) => { // when a user clicks a short URL they're bein
 });
 
 app.post("/urls/:id/delete", (req, res) => { // delete button
-  if (!req.cookies["user_id"]) { // redirection if user logged in
+  if (!req.session.user_id) { // redirection if user logged in
     return res.send("<html><body>You<b>MUST</b>log in to delete shorten URL!!!</body></html>\n");
   }
   const shortUrlId = req.params.id;
@@ -168,18 +176,18 @@ app.post("/urls/:id/delete", (req, res) => { // delete button
 
 
 app.post("/logout", (req, res) => { // logout button
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/urls'); // redirect to URL (home)) page
 });
 
 app.get("/register", (req, res) => { // registration form
   
-  if (req.cookies["user_id"]) { // redirection if user logged in
+  if (req.session.user_id) { // redirection if user logged in
     return res.redirect('/urls');
   }
 
   const templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   }; 
   res.render("register", templateVars);
 });
@@ -203,7 +211,7 @@ app.post("/register", (req, res) => {
       password: bcrypt.hashSync(password, salt)
     };
     console.log(users);
-    res.cookie("user_id", id); 
+    req.session.user_id = id; // cookie session is being set
     res.redirect('/urls');
     }
     
@@ -220,19 +228,19 @@ app.post("/login", (req, res) => {
  } else if (!checkPassword(users, email, password)) {
     res.status(403).send('Wrong password');
  } else {
-  res.cookie("user_id", id);
+  req.session.user_id = id; // cookie session is being set
   res.redirect('/urls');
  }
 });
 
 app.get("/login", (req, res) => { // registration form
    
-  if (req.cookies["user_id"]) { // redirection if user logged in
+  if (req.session.user_id) { // redirection if user logged in
     return res.redirect('/urls');
   }
   
   const templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   }; 
   res.render("login", templateVars);
 
