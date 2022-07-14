@@ -1,15 +1,12 @@
 const express = require("express");
 const app = express();
 const cookieParser = require('cookie-parser');
+const bcrypt = require("bcryptjs");
 app.use(cookieParser()); // use cookies;
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs"); // EJS engine
-
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-// };
+const salt = bcrypt.genSaltSync(10);
 
 
 const urlDatabase = {
@@ -27,12 +24,12 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: bcrypt.hashSync("purple-monkey-dinosaur", salt),
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: bcrypt.hashSync("dishwasher-funk", salt),
   },
 };
 
@@ -48,7 +45,7 @@ const findUserByEmail = function (users, email) { // checks is email already exi
   }
  } 
 
- const findUserId = function (users, email) {
+ const findUserId = function (users, email) { // checks if user ID exists in users object
   for (let userId in users) {
     if (users[userId].email === email) {
      return userId; 
@@ -58,7 +55,7 @@ const findUserByEmail = function (users, email) { // checks is email already exi
 
  const checkPassword = function (users, email, password) {
   for (let userId in users) {
-    if (users[userId].email === email && users[userId].password === password) {
+    if (users[userId].email === email && bcrypt.compareSync(password, users[userId].password )) {
      return true; 
     }
   }
@@ -203,7 +200,7 @@ app.post("/register", (req, res) => {
     users[id] = { // add new user object to global users object
       id, 
       email, 
-      password
+      password: bcrypt.hashSync(password, salt)
     };
     console.log(users);
     res.cookie("user_id", id); 
