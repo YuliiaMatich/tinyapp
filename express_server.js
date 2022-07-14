@@ -15,7 +15,7 @@ const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs"); // EJS engine
 const salt = bcrypt.genSaltSync(10);
-
+const { findUserByEmail } = require("./helper")
 
 const urlDatabase = {
   b6UTxQ: {
@@ -41,17 +41,11 @@ const users = {
   },
 };
 
+
 const generateRandomString = () => { // generates 6 alpha numeric characters random Id;
   return (Math.random() + 1).toString(36).substring(6);
 };
 
-const findUserByEmail = function (users, email) { // checks is email already exist in users object
-  for (let userName in users) {
-    if (users[userName].email === email) {
-     return users[userName]; 
-    }
-  }
- } 
 
  const findUserId = function (users, email) { // checks if user ID exists in users object
   for (let userId in users) {
@@ -157,7 +151,7 @@ app.post("/urls/:id/", (req, res) => { // updates the existing long URL
 
 app.get("/u/:id", (req, res) => { // when a user clicks a short URL they're being redirected to long URL
   const shortUrlId = req.params.id; // parameter of request;
-  let longURL = urlDatabase[shortUrlId];
+  let longURL = urlDatabase[shortUrlId].longURL;
   if (!longURL) {
     res.send('URL does not exist');
   } else {
