@@ -63,6 +63,10 @@ app.get("/urls", (req, res) => { // renders index page with all URLs
 });
 
 app.post("/urls", (req, res) => {
+  if (!req.cookies["user_id"]) { // redirection if user logged in
+    return res.send("<html><body>You<b>MUST</b>log in to shorten URL!!!</body></html>\n");
+  }
+  
   let randomId = generateRandomString(); // called function generartes ramdom short URL
   let userLongUrl = req.body.longURL; // long URL input from user;
   urlDatabase[randomId] = userLongUrl; // added new key value pair to URL database
@@ -83,6 +87,9 @@ app.get("/hello", (req, res) => { // placeholder route
 });
 
 app.get("/urls/new", (req, res) => { // renders a page to create a new URL
+  if (!req.cookies["user_id"]) { // redirects if is not logged in
+    return res.redirect('/login');
+  }
   const templateVars = {
     user: users[req.cookies["user_id"]]
   };
@@ -129,6 +136,11 @@ app.post("/logout", (req, res) => { // logout button
 });
 
 app.get("/register", (req, res) => { // registration form
+  
+  if (req.cookies["user_id"]) { // redirection if user logged in
+    return res.redirect('/urls');
+  }
+
   const templateVars = {
     user: users[req.cookies["user_id"]]
   }; 
@@ -177,10 +189,16 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/login", (req, res) => { // registration form
+   
+  if (req.cookies["user_id"]) { // redirection if user logged in
+    return res.redirect('/urls');
+  }
+  
   const templateVars = {
     user: users[req.cookies["user_id"]]
   }; 
   res.render("login", templateVars);
+
 });
 
 app.listen(PORT, () => { // server listens to user's input
