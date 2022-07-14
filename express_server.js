@@ -1,9 +1,7 @@
 const express = require("express");
 const cookieSession = require('cookie-session');
 const app = express();
-// const cookieParser = require('cookie-parser'); // replaced with cookie session
 const bcrypt = require("bcryptjs");
-//app.use(cookieParser()); // replaced with cookie session
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2'],
@@ -64,7 +62,6 @@ const generateRandomString = () => { // generates 6 alpha numeric characters ran
  }
 
  const urlsForUser = function (id) {
-  
   let urlsObject = {};
   for (let key in urlDatabase) {
     if (urlDatabase[key].userID === id) {
@@ -99,7 +96,6 @@ app.post("/urls", (req, res) => {
     longURL: userLongUrl,
     userID: userId
   }; // added new key value pair to URL database
-  console.log(req.body); // Log the POST request body to the console
   res.redirect(`/urls/${randomId}`); // redirect to a page with a newly created URL
 });
 
@@ -168,18 +164,15 @@ app.post("/urls/:id/delete", (req, res) => { // delete button
   res.redirect('/urls'); // redirect to URL (home)) page
 });
 
-
 app.post("/logout", (req, res) => { // logout button
   req.session = null;
   res.redirect('/urls'); // redirect to URL (home)) page
 });
 
 app.get("/register", (req, res) => { // registration form
-  
   if (req.session.user_id) { // redirection if user logged in
     return res.redirect('/urls');
   }
-
   const templateVars = {
     user: users[req.session.user_id]
   }; 
@@ -204,13 +197,11 @@ app.post("/register", (req, res) => {
       email, 
       password: bcrypt.hashSync(password, salt)
     };
-    console.log(users);
+    
     req.session.user_id = id; // cookie session is being set
     res.redirect('/urls');
-    }
-    
+    }  
 });
-
 
 app.post("/login", (req, res) => {
   let email = req.body.email;
